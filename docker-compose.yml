@@ -1,0 +1,43 @@
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: innotechfusion-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: innotechfusion
+    ports:
+      - "3307:3306"
+    volumes:
+      - donnees-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  back:
+    build:
+      context: ./backend
+    container_name: innotechfusion-back
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/innotechfusion
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  front:
+    build:
+      context: ./frontend
+    container_name: innotechfusion-front
+    ports:
+      - "4200:80"
+    depends_on:
+      - back
+
+volumes:
+  donnees-mysql:
